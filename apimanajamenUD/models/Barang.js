@@ -7,8 +7,11 @@ const barangSchema = new mongoose.Schema({
     },
     satuan: {
         type: String,
-        enum: ['pcs', 'kg', 'ltr', 'dus', 'tray', 'gln', 'unit'],
-        default: 'pcs'
+        required: true,
+        default: 'pcs',
+        trim: true
+        // Allows custom units instead of enum restriction
+        // Common units: pcs, kg, ltr, dus, tray, gln, unit
     },
     harga_jual: {
         type: Number,
