@@ -1,5 +1,4 @@
 const Transaksi = require('../models/Transaksi')
-const TransaksiDetail = require('../models/TransaksiDetail')
 const Barang = require('../models/Barang')
 const Periode = require('../models/Periode')
 const { generateKodeTransaksi } = require('../services/codeGenerator')
@@ -67,17 +66,9 @@ const getTransaksiById = async (req, res) => {
             })
         }
 
-        // Get transaction details
-        const details = await TransaksiDetail.find({ transaksi_id: transaksi._id })
-            .populate('barang_id', 'nama_barang satuan')
-            .populate('ud_id', 'kode_ud nama_ud')
-
         res.status(200).json({
             success: true,
-            data: {
-                ...transaksi.toObject(),
-                items: details
-            }
+            data: transaksi
         })
     } catch (error) {
         res.status(500).json({
@@ -135,25 +126,27 @@ const createTransaksi = async (req, res) => {
         let totalHargaModal = 0
 
         if (items && items.length > 0) {
-            const detailsToCreate = []
+            const itemsToStore = []
 
             for (const item of items) {
                 const barang = await Barang.findById(item.barang_id)
                 if (!barang) continue
 
+                const harga_jual = item.harga_jual ?? barang.harga_jual
+                const harga_modal = item.harga_modal ?? barang.harga_modal
+
                 const { subtotal_jual, subtotal_modal, keuntungan } = calculateProfit(
-                    barang.harga_jual,
-                    barang.harga_modal,
+                    harga_jual,
+                    harga_modal,
                     item.qty
                 )
 
-                detailsToCreate.push({
-                    transaksi_id: transaksi._id,
+                itemsToStore.push({
                     barang_id: barang._id,
                     ud_id: barang.ud_id,
                     qty: item.qty,
-                    harga_jual: barang.harga_jual,
-                    harga_modal: barang.harga_modal,
+                    harga_jual,
+                    harga_modal,
                     subtotal_jual,
                     subtotal_modal,
                     keuntungan
@@ -163,9 +156,8 @@ const createTransaksi = async (req, res) => {
                 totalHargaModal += subtotal_modal
             }
 
-            await TransaksiDetail.insertMany(detailsToCreate)
-
-            // Update transaksi totals
+            // Update transaksi items and totals
+            transaksi.items = itemsToStore
             transaksi.total_harga_jual = totalHargaJual
             transaksi.total_harga_modal = totalHargaModal
             transaksi.total_keuntungan = totalHargaJual - totalHargaModal
@@ -222,10 +214,7 @@ const updateTransaksi = async (req, res) => {
 
         // Update items if provided
         if (items && items.length > 0) {
-            // Delete existing details
-            await TransaksiDetail.deleteMany({ transaksi_id: transaksi._id })
-
-            const detailsToCreate = []
+            const itemsToStore = []
             let totalHargaJual = 0
             let totalHargaModal = 0
 
@@ -233,19 +222,21 @@ const updateTransaksi = async (req, res) => {
                 const barang = await Barang.findById(item.barang_id)
                 if (!barang) continue
 
+                const harga_jual = item.harga_jual ?? barang.harga_jual
+                const harga_modal = item.harga_modal ?? barang.harga_modal
+
                 const { subtotal_jual, subtotal_modal, keuntungan } = calculateProfit(
-                    barang.harga_jual,
-                    barang.harga_modal,
+                    harga_jual,
+                    harga_modal,
                     item.qty
                 )
 
-                detailsToCreate.push({
-                    transaksi_id: transaksi._id,
+                itemsToStore.push({
                     barang_id: barang._id,
                     ud_id: barang.ud_id,
                     qty: item.qty,
-                    harga_jual: barang.harga_jual,
-                    harga_modal: barang.harga_modal,
+                    harga_jual,
+                    harga_modal,
                     subtotal_jual,
                     subtotal_modal,
                     keuntungan
@@ -255,8 +246,7 @@ const updateTransaksi = async (req, res) => {
                 totalHargaModal += subtotal_modal
             }
 
-            await TransaksiDetail.insertMany(detailsToCreate)
-
+            transaksi.items = itemsToStore
             transaksi.total_harga_jual = totalHargaJual
             transaksi.total_harga_modal = totalHargaModal
             transaksi.total_keuntungan = totalHargaJual - totalHargaModal
@@ -304,15 +294,13 @@ const completeTransaksi = async (req, res) => {
             })
         }
 
-        // Recalculate totals from details
-        const details = await TransaksiDetail.find({ transaksi_id: transaksi._id })
-
+        // Recalculate totals from items
         let totalHargaJual = 0
         let totalHargaModal = 0
 
-        for (const detail of details) {
-            totalHargaJual += detail.subtotal_jual
-            totalHargaModal += detail.subtotal_modal
+        for (const item of transaksi.items) {
+            totalHargaJual += item.subtotal_jual
+            totalHargaModal += item.subtotal_modal
         }
 
         transaksi.total_harga_jual = totalHargaJual

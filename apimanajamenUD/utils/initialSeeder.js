@@ -67,8 +67,8 @@ const seedInitialData = async () => {
                 isActive: true
             },
             {
-                kode_ud: "UD-BMJ-001",
-                nama_ud: "UD BERKAH MAHABBAH JAYA",
+                kode_ud: "UD-PPM-001",
+                nama_ud: "UD PILAR PANGAN MANDIRI",
                 alamat: "",
                 nama_pemilik: "AN. FARHAN MUHAMMAD",
                 bank: "MANDIRI",

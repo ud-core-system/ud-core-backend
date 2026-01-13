@@ -1,5 +1,4 @@
 const Transaksi = require('../models/Transaksi')
-const TransaksiDetail = require('../models/TransaksiDetail')
 const UD = require('../models/UD')
 const Barang = require('../models/Barang')
 const Dapur = require('../models/Dapur')
@@ -111,24 +110,16 @@ const getSalesByUD = async (req, res) => {
         const matchStage = { status: 'completed' }
         if (periode_id) matchStage.periode_id = periode_id
 
-        const salesByUD = await TransaksiDetail.aggregate([
-            {
-                $lookup: {
-                    from: 'transaksis',
-                    localField: 'transaksi_id',
-                    foreignField: '_id',
-                    as: 'transaksi'
-                }
-            },
-            { $unwind: '$transaksi' },
-            { $match: { 'transaksi.status': 'completed' } },
+        const salesByUD = await Transaksi.aggregate([
+            { $match: matchStage },
+            { $unwind: '$items' },
             {
                 $group: {
-                    _id: '$ud_id',
-                    totalJual: { $sum: '$subtotal_jual' },
-                    totalModal: { $sum: '$subtotal_modal' },
-                    totalKeuntungan: { $sum: '$keuntungan' },
-                    totalQty: { $sum: '$qty' }
+                    _id: '$items.ud_id',
+                    totalJual: { $sum: '$items.subtotal_jual' },
+                    totalModal: { $sum: '$items.subtotal_modal' },
+                    totalKeuntungan: { $sum: '$items.keuntungan' },
+                    totalQty: { $sum: '$items.qty' }
                 }
             },
             {

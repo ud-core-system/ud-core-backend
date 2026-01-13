@@ -42,7 +42,41 @@ const transaksiSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'UDUser',
         required: true
-    }
+    },
+    items: [{
+        barang_id: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'UDBarang'
+        },
+        ud_id: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'UDUD'
+        },
+        qty: {
+            type: Number,
+            required: true
+        },
+        harga_jual: {
+            type: Number,
+            required: true
+        },
+        harga_modal: {
+            type: Number,
+            required: true
+        },
+        subtotal_jual: {
+            type: Number,
+            required: true
+        },
+        subtotal_modal: {
+            type: Number,
+            required: true
+        },
+        keuntungan: {
+            type: Number,
+            required: true
+        }
+    }]
 }, {
     timestamps: true
 })
