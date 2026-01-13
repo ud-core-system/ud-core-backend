@@ -987,3 +987,101 @@ Role: admin
 - `DAPUR`
 - `PERIODE`
 - `TRANSAKSI`
+
+---
+
+## 👤 User Management
+
+### List All Users
+```http
+GET /user
+Authorization: bearer <token>
+Role: admin
+```
+
+**Query Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `page` | number | Page number |
+| `limit` | number | Items per page |
+| `search` | string | Search by username or email |
+| `role` | string | Filter by role |
+| `isActive` | boolean | Filter by active status |
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "_id": "ObjectId",
+      "username": "string",
+      "email": "string",
+      "role": "admin | ud_operator",
+      "ud_id": { ... },
+      "isActive": true,
+      "createdAt": "ISO Date"
+    }
+  ],
+  "pagination": { ... }
+}
+```
+
+---
+
+### Get User Detail
+```http
+GET /user/:id
+Authorization: bearer <token>
+Role: admin
+```
+
+---
+
+### Create User
+```http
+POST /user
+Authorization: bearer <token>
+Role: admin
+```
+
+**Request Body:**
+```json
+{
+  "username": "string (required, unique)",
+  "email": "string (required, unique)",
+  "password": "string (required)",
+  "role": "admin | ud_operator (default: ud_operator)",
+  "ud_id": "ObjectId (optional)"
+}
+```
+
+---
+
+### Update User
+```http
+PUT /user/:id
+Authorization: bearer <token>
+Role: admin
+```
+
+**Request Body:**
+```json
+{
+  "username": "string (optional)",
+  "email": "string (optional)",
+  "password": "string (optional)",
+  "role": "string (optional)",
+  "ud_id": "ObjectId (optional)",
+  "isActive": "boolean (optional)"
+}
+```
+
+---
+
+### Delete User
+```http
+DELETE /user/:id
+Authorization: bearer <token>
+Role: admin
+```
